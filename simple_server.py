@@ -9,7 +9,7 @@ import json
 import subprocess
 import os
 
-PORT = 81
+PORT = int(os.environ.get('PORT', 81))
 LM_STUDIO_URL = "https://lm.cypggs.com/v1/chat/completions"
 
 class SoupHandler(http.server.SimpleHTTPRequestHandler):
