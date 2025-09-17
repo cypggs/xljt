@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心灵鸡汤生成器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            max-width: 800px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .soup-container {
+            min-height: 200px;
+            margin: 40px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .soup-text {
+            color: white;
+            font-size: 1.5em;
+            line-height: 1.8;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+            max-width: 600px;
+        }
+
+        .soup-text.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .generate-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(238, 90, 36, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(238, 90, 36, 0.6);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .loading {
+            display: none;
+            color: white;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <h1>✨ 心灵鸡汤生成器 ✨</h1>
+        <div class="soup-container">
+            <div class="soup-text" id="soupText">
+                点击下方按钮，获取一份温暖的心灵鸡汤 💫
+            </div>
+        </div>
+        <button class="generate-btn" id="generateBtn" onclick="generateSoup()">
+            🌟 来一碗鸡汤 🌟
+        </button>
+        <div class="loading" id="loading">正在熬制鸡汤</div>
+    </div>
+
+    <div class="footer">
+        Powered by LM Studio & Hunyuan-MT-7B
+    </div>
+
+    <script>
+        // 创建星星背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numberOfStars = 100;
+            
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 生成心灵鸡汤
+        async function generateSoup() {
+            const soupText = document.getElementById('soupText');
+            const generateBtn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+
+            // 显示加载状态
+            generateBtn.disabled = true;
+            loading.classList.add('show');
+            soupText.classList.remove('show');
+
+            try {
+                // 随机选择一个主题
+                const topics = [
+                    "人生感悟",
+                    "励志奋斗", 
+                    "内心平静",
+                    "自我成长",
+                    "积极心态",
+                    "梦想追求",
+                    "感恩生活",
+                    "克服困难",
+                    "友情爱情",
+                    "时间珍惜"
+                ];
+                const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+
+                console.log(`正在生成关于"${randomTopic}"的心灵鸡汤...`);
+
+                const requestBody = {
+                    model: "qwen3-4b-instruct-2507-mlx",
+                    // model: "gemma-3-270m-it",
+                    // model: "hunyuan-mt-7b",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `请直接生成一段关于"${randomTopic}"的心灵鸡汤。要求：温暖积极，10-30字，诗意优美，富有哲理。只返回鸡汤文字，不要任何解释或分析。`
+                        },
+                        {
+                            role: "user",
+                            content: `请给我一段关于${randomTopic}的心灵鸡汤`
+                        }
+                    ],
+                    temperature: 0.8,
+                    max_tokens: 200,
+                    stream: false
+                };
+
+                console.log('发送请求到 LM Studio:', requestBody);
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('响应状态:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API 错误响应:', errorText);
+                    throw new Error(`API 请求失败: ${response.status} - ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('API 返回数据:', data);
+
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('API 返回数据格式异常');
+                }
+
+                // hunyuan-mt-7b 模型直接使用 content 字段
+                const soupContent = data.choices[0].message.content.trim();
+
+                if (!soupContent) {
+                    throw new Error('生成的内容为空');
+                }
+
+                // 显示鸡汤内容
+                soupText.textContent = soupContent;
+                soupText.classList.add('show');
+
+            } catch (error) {
+                console.error('生成鸡汤失败:', error);
+                
+                // 显示更详细的错误信息
+                let errorMessage = '抱歉，鸡汤还在熬制中 🥺';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage = '无法连接到 LM Studio，请确保服务正在运行 🔧';
+                } else if (error.message.includes('API 请求失败')) {
+                    errorMessage = `API 调用失败: ${error.message} 🚨`;
+                } else if (error.message.includes('数据格式异常')) {
+                    errorMessage = 'AI 返回了意外的数据格式 📋';
+                } else if (error.message.includes('内容为空')) {
+                    errorMessage = 'AI 生成了空内容，请重试 🔄';
+                }
+                
+                soupText.textContent = errorMessage;
+                soupText.classList.add('show');
+            } finally {
+                // 恢复按钮状态
+                loading.classList.remove('show');
+                generateBtn.disabled = false;
+            }
+        }
+
+        // 页面加载完成后创建星星
+        window.addEventListener('load', () => {
+            createStars();
+            // 显示初始文本
+            document.getElementById('soupText').classList.add('show');
+        });
+    </script>
+</body>
+</html>
